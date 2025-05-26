@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2D Autobattle</title>
+  <style>
+    body { font-family: sans-serif; background: #222; color: #fff; text-align: center; }
+    canvas { background: #333; display: block; margin: 20px auto; border: 2px solid #555; }
+    .log { max-width: 600px; margin: 10px auto; background: #111; padding: 10px; height: 150px; overflow-y: auto; font-size: 14px; border: 1px solid #444; }
+  </style>
+</head>
+<body>
+  <h1>2D Автобой</h1>
+  <canvas id="game" width="600" height="200"></canvas>
+  <div class="log" id="log"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const log = document.getElementById("log");
+
+    const teams = {
+      red: [
+        { name: "Рыцарь", x: 50, y: 50, hp: 100, color: "red" },
+        { name: "Маг", x: 50, y: 120, hp: 80, color: "orange" }
+      ],
+      blue: [
+        { name: "Ассасин", x: 500, y: 50, hp: 70, color: "blue" },
+        { name: "Лучник", x: 500, y: 120, hp: 90, color: "cyan" }
+      ]
+    };
+
+    function drawCharacters() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      [...teams.red, ...teams.blue].forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 40, 40);
+        ctx.fillStyle = "white";
+        ctx.fillText(`${p.name} (${p.hp})`, p.x - 10, p.y - 5);
+      });
+    }
+
+    function logMessage(msg) {
+      log.innerHTML = `${msg}<br>` + log.innerHTML;
+    }
+
+    function attack(attacker, defender) {
+      const skill = Math.random() < 0.5 ? "Удар" : "Супер удар";
+      const dmg = skill === "Удар" ? Math.floor(Math.random() * 10 + 5) : Math.floor(Math.random() * 20 + 10);
+      defender.hp -= dmg;
+      logMessage(`${attacker.name} использует ${skill} против ${defender.name} и наносит ${dmg} урона!`);
+    }
+
+    function battleTurn() {
+      const alive = t => t.filter(p => p.hp > 0);
+      const redAlive = alive(teams.red);
+      const blueAlive = alive(teams.blue);
+
+      if (redAlive.length === 0 || blueAlive.length === 0) {
+        const winner = redAlive.length > 0 ? "Красная команда" : "Синяя команда";
+        logMessage(`<b>${winner} победила!</b>`);
+        clearInterval(gameLoop);
+        return;
+      }
+
+      const red = redAlive[Math.floor(Math.random() * redAlive.length)];
+      const blue = blueAlive[Math.floor(Math.random() * blueAlive.length)];
+
+      // Один из красных атакует синего и наоборот
+      attack(red, blue);
+      if (blue.hp > 0) attack(blue, red);
+      drawCharacters();
+    }
+
+    drawCharacters();
+    const gameLoop = setInterval(battleTurn, 1500);
+  </script>
+</body>
+</html>
